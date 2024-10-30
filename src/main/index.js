@@ -1,10 +1,14 @@
 /* eslint-disable prettier/prettier */
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog} from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import mysql from 'mysql2/promise'
 import os from 'os'
+import { autoUpdater }  from 'electron-updater'
+autoUpdater.autoDownload = false
+autoUpdater.autoInstallOnAppQuit = true
+
 
 // Configuraciones específicas para Windows 7
 if (os.platform() === 'win32' && os.release().startsWith('6.1')) {
@@ -125,6 +129,43 @@ function createWindow() {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  autoUpdater.checkForUpdates()
+
+  autoUpdater.on('update-available', (info) => {
+    dialog.showMessageBox({
+      type: 'info',
+      title: 'Actualización disponible',
+      message: `La versión ${info.version} está disponible. ¿Desea descargarla ahora?`,
+      buttons: ['Sí', 'No']
+    }).then((result) => {
+      if (result.response === 0) {
+        autoUpdater.downloadUpdate()
+        mainWindow.webContents.send('update-downloading')
+      }
+    })
+  })
+
+  // Cuando la actualización se ha descargado
+  autoUpdater.on('update-downloaded', () => {
+    dialog.showMessageBox({
+      type: 'info',
+      title: 'Actualización lista',
+      message: 'La actualización se ha descargado. La aplicación se reiniciará para instalarla.',
+      buttons: ['Reiniciar ahora', 'Más tarde']
+    }).then((result) => {
+      if (result.response === 0) {
+        autoUpdater.quitAndInstall()
+      }
+    })
+  })
+
+  // Manejar errores
+  autoUpdater.on('error', (err) => {
+    dialog.showErrorBox('Error en la actualización', 
+      'Ocurrió un error al buscar actualizaciones: ' + err.message)
+  })
+
 }
 
 // This method will be called when Electron has finished
@@ -163,6 +204,8 @@ app.whenReady().then(() => {
     return await changeState(reclamoId, reclamosEstado)
   })
 
+  ipcMain.on('install-update', () => autoUpdater.quitAndInstall());
+
   createWindow()
 
   app.on('activate', function () {
@@ -170,6 +213,10 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
+
+  setInterval(() => {
+    autoUpdater.checkForUpdates();
+  }, 1000 * 60 * 60); // Verificar cada hora
 })
 
 // Quit when all windows are closed, except on macOS

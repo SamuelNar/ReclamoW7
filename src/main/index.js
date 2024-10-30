@@ -9,7 +9,6 @@ import { autoUpdater }  from 'electron-updater'
 autoUpdater.autoDownload = false
 autoUpdater.autoInstallOnAppQuit = true
 
-
 // Configuraciones específicas para Windows 7
 if (os.platform() === 'win32' && os.release().startsWith('6.1')) {
   // Deshabilitar aceleración por hardware

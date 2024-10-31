@@ -27,9 +27,9 @@ if (os.platform() === 'win32' && os.release().startsWith('6.1')) {
 }
 
 const db = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '155135250sA',
+  host: '192.168.50.28',
+  user: 'lidercom',
+  password: '123lidercom456',
   database: 'gestion_reclamos'
 })
 
@@ -157,6 +157,10 @@ function createWindow() {
         autoUpdater.quitAndInstall()
       }
     })
+  })
+  
+  autoUpdater.on('download-progress', (progressObj) => {
+    mainWindow.webContents.send('download-progress', progressObj)
   })
 
   // Manejar errores

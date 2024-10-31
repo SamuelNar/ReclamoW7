@@ -1,13 +1,25 @@
-import { useState } from 'react'
+/* eslint-disable prettier/prettier */
+import { useState, useEffect} from 'react'
 import ListaReclamos from './components/ListaReclamos'
 import NuevoReclamo from './components/NuevoReclamo'
 import img from './assets/LogoTextoAzul.png'
+import UpdateProgress from './components/UpdateProgress'
 function App() {
   const [mostrarLista, setMostrarLista] = useState(true)
-
+  const [isDownloading, setIsDownloading] = useState(false)
   const handleVista = () => {
     setMostrarLista(!mostrarLista) // Alterna entre vistas
   }
+
+  useEffect(() => {
+    // Listener para detectar cuando comienza la descarga
+    window.api.onUpdateDownloading(() => setIsDownloading(true))
+
+    // Listener para detectar cuando la descarga finaliza
+    window.api.onDownloadProgress((progress) => {
+      if (progress.percent === 100) setIsDownloading(false)
+    })
+  }, [])
 
   return (
     <div style={styles.container}>
@@ -20,6 +32,8 @@ function App() {
         </button>
       </div>
       {mostrarLista ? <ListaReclamos /> : <NuevoReclamo onBack={handleVista} />}
+      {/* Mostrar UpdateProgress solo cuando isDownloading es true */}
+      {isDownloading && <UpdateProgress />}
     </div>
   )
 }

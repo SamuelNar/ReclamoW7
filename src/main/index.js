@@ -175,6 +175,14 @@ function createWindow() {
 // initialization and is ready to create browser windows.
 app.whenReady().then(() => {
   // Set app user model id for windows
+
+  app.commandLine.appendSwitch('ignore-certificate-errors');
+
+  app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
+    event.preventDefault();
+    callback(true); // Ignora el error del certificado
+  });
+  
   electronApp.setAppUserModelId('com.electron')
 
   // Configurar el AppUserModelId para Windows
